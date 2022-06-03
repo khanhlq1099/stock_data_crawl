@@ -1,0 +1,43 @@
+python -m venv venv
+
+Windows
+source venv/Scripts/activate
+deactivate
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+pip install typer
+pip install typer[all]
+pip install requests
+pip install pydantic
+pip install pyodbc
+
+Một số tool nên tham khảo
+- click-spinner: Tạo loading
+- tabulate: Tạo bảng
+- tqdm: Tạo progressbar typer.progressbar()
+
+python main.py --install-completion
+
+So, by default:
+A CLI argument is required
+A CLI option is optional
+But the required and optional defaults can be changed.
+
+So, the main and most important difference is that:
+
+CLI options start with -- and don't depend on the order
+CLI arguments depend on the sequence order
+
+/* Chay project */
+python -m ssi
+
+pytest ssi/test
+
+python -m ssi etl-securities
+python -m ssi etl-daily-symbols-price --help
+python -m ssi etl-daily-symbols-price PVI,PRE MTD --business-date 2022-05-28
+python -m ssi etl-daily-symbols-price PVI,PRE PERIOD --from-date 2022-05-01 --to-date 2022-05-28
+
+
+python -m ssi etl-daily-stock-price PERIOD --from-date 2022-05-01 --to-date 2022-05-28
