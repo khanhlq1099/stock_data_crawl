@@ -1,19 +1,3 @@
-from enum import Enum
-
-class PERIOD_TYPE(Enum):
-    PERIOD = "PERIOD"
-    YTD = "YTD"
-    QTD = "QTD"
-    MTD = "MTD"
-    TODAY = "TODAY"
-    YESTERDAY = "YESTERDAY"
-    Y = "Y"
-    Q = "Q"
-    M = "M"
-    # T2WTD = 7
-    # T4WTD = 8
-    # T8WTD = 9
-
 class MARKET_API:
     ROOT_PATH = "https://fc-data.ssi.com.vn/api/v2/Market/"
 
@@ -27,3 +11,9 @@ class MARKET_API:
     DAILY_INDEX_API = "DailyIndex"
     DAILY_STOCK_PRICE_API = "DailyStockPrice"
     BACKTEST_API = "BackTest"
+
+    DEFAULT_REQUEST_API_DELAY_TIME = 5 # s
+    DEFAULT_PAGE_SIZE_1 = 1
+    DEFAULT_PAGE_SIZE_10 = 10
+    DEFAULT_PAGE_SIZE_100 = 100
+    DEFAULT_PAGE_SIZE_1000 = 1000
