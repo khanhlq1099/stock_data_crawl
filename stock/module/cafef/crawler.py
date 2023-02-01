@@ -1,9 +1,12 @@
-from time import sleep
+from cgitb import html, reset
+# from msilib.schema import tables
+from time import sleep, time
 from datetime import date, datetime, timedelta
 import re
 
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -15,9 +18,7 @@ import requests
 import pandas as pd
 import numpy as np
 
-from stock.config import ROOT_DIR
 import stock.lib.convert_helper as convert_helper
-
 
 def extract_symbol_overview_data(symbol: str):
     url = "http://s.cafef.vn/hastc/PVI-cong-ty-co-phan-pvi.chn"
@@ -29,34 +30,36 @@ def extract_daily_symbol_price_data(symbol: str, from_date: date, to_date: date,
 
     if driver is None:
         chrome_options = Options()
-        # chrome_options.add_argument("--disable-extensions")
-        # chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument("--no-sandbox") # linux only
-        # chrome_options.add_argument("--incognito")
+        # chrome_options.add_argument("--headless")
+        # chrome_options.add_argument('--no-sandbox')
+        # chrome_options.add_argument("--disable-setuid-sandbox")
+        # chrome_options.add_argument('--disable-dev-shm-usage') 
+        # chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--window-size=1920x1080")
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         # chrome_options.add_argument("--verbose")
         # chrome_options.headless = True # also works
 
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+        # driver = webdriver.Remote("http://127.0.0.1:4444/wd/hub",DesiredCapabilities.CHROME)
         # executable_path = f"{ROOT_DIR}/stock/lib/chromedriver"
         # driver = webdriver.Chrome(options=chrome_options, executable_path=executable_path)
 
     driver.implicitly_wait(10)
     driver.set_page_load_timeout(60)
     driver.get(url)
-    driver.find_element(By.XPATH, '//*[@id="ctl00_ContentPlaceHolder1_ctl03_dpkTradeDate1_txtDatePicker"]').send_keys(from_date.strftime("%d/%m/%Y"))
+    driver.find_element(By.XPATH, '//*[@id="ContentPlaceHolder1_ctl03_dpkTradeDate1_txtDatePicker"]').send_keys(from_date.strftime("%d/%m/%Y"))
     sleep(1)
-    driver.find_element(By.XPATH, '//*[@id="ctl00_ContentPlaceHolder1_ctl03_dpkTradeDate2_txtDatePicker"]').send_keys(to_date.strftime("%d/%m/%Y"))
+    driver.find_element(By.XPATH, '//*[@id="ContentPlaceHolder1_ctl03_dpkTradeDate2_txtDatePicker"]').send_keys(to_date.strftime("%d/%m/%Y"))
     sleep(1)
-    driver.find_element(By.XPATH, '//*[@id="ctl00_ContentPlaceHolder1_ctl03_btSearch"]').click()
+    driver.find_element(By.XPATH, '//*[@id="ContentPlaceHolder1_ctl03_btSearch"]').click()
     sleep(1)
 
     def extract_table_data():
         rows = []
         table_els = driver.find_elements(By.XPATH, '//table[starts-with(@id,"GirdTable")]')
         if len(table_els) > 0:
-            tr_els = table_els[0].find_elements(By.XPATH, '//tr[starts-with(@id,"ctl00_ContentPlaceHolder1_ctl03_rptData")]')
+            tr_els = table_els[0].find_elements(By.XPATH, '//tr[starts-with(@id,"ContentPlaceHolder1_ctl03_rptData")]')
 
             for tr_el in tr_els:
                 rows.append(extract_tr_data_from_table(tr_el))
@@ -432,7 +435,7 @@ def extract_daily_symbol_price_data(symbol: str, from_date: date, to_date: date,
     df = pd.DataFrame(data=all_rows)
     # df = df.sort_values(['ma', 'ngay'], ascending=[True, True])
     # Xử lý lỗi do tự động chuyển kiểu None thành NaN do cột này vốn là kiểu float
-    df['phan_tram_thay_doi']=df['phan_tram_thay_doi'].replace(np.nan, None)
+    # df['phan_tram_thay_doi']=df['phan_tram_thay_doi'].replace(np.nan, None)
     # print(df.head(5))
     # print(all_rows)
     # print(df)
@@ -587,6 +590,348 @@ def extract_hourly_symbol_price_data_by_bs4(symbol: str, from_date: date, to_dat
 
         sleep(3)
 
+    df = pd.DataFrame(all_rows)
+    print(df)
+    return df
+
+# Trich xuat du lieu lich su gia cua tung san
+def extract_daily_market_history_lookup_price_data_by_bs4(market :str, from_date: date, to_date: date):
+    page_index = 1
+
+    def extract_table_data(current_date: date):
+        rows = []
+        url = f'https://s.cafef.vn/TraCuuLichSu2/{page_index}/{market}/{current_date.strftime("%d/%m/%Y")}.chn'
+
+        html_content = requests.get(url).text
+        soup = BeautifulSoup(html_content,"html.parser")
+
+        table = soup.find("table",attrs={"id": "table2sort"})
+        if table is not None:
+            tr_els = table.find_all("tr")
+            for tr_el in tr_els:
+                rows.append(extract_tr_data_from_table(tr_el))
+        return rows
+    
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tds = [td_el.text.strip() for td_el in tr_el.find_all("td")]
+            # print(tds)
+            tr_dict["market"] = market
+            tr_dict["ma"] = tds[0]
+            tr_dict["ngay"] = current_date
+            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',',''))
+
+            strs = tds[3].strip().split(' ')
+            if len(strs) == 3:
+                temp = convert_helper.convert_str_to_float(strs[0].replace(',',''))
+                tr_dict["gia_tri_thay_doi"] = temp if temp is not None else None
+                percent_change_str = re.sub(r'[( %)]', '', strs[1].strip())
+                temp = convert_helper.convert_str_to_float(percent_change_str)
+                tr_dict["phan_tram_thay_doi"] =  temp / 100 if temp is not None else None
+            else:
+                tr_dict["gia_tri_thay_doi"] = None
+                tr_dict["phan_tram_thay_doi"] = None
+
+            tr_dict["gia_tham_chieu"] = convert_helper.convert_str_to_float(tds[5].replace(',', ''))
+            tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[6].replace(',', ''))
+            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[7].replace(',', ''))
+            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[8].replace(',', ''))
+
+            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[9].replace(',', ''))
+            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[10].replace(',', ''))
+            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[11].replace(',', ''))
+            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[12].replace(',', ''))
+
+        return tr_dict
+
+    all_rows = []
+    delta = timedelta(days=1)
+    current_date = from_date
+    while current_date <= to_date:
+        rows = extract_table_data(current_date)
+        all_rows.extend(rows[1:len(rows)-1])
+        current_date += delta
+
+        sleep(5)
+        
+    df = pd.DataFrame(all_rows)
+    print(df)
+    return df
+
+# Trich xuat du lieu thong ke dat lenh cua tung san
+def extract_daily_market_setting_command_by_bs4(market :str, from_date: date, to_date: date):
+    page_index = 2
+
+    def extract_table_data(current_date: date):
+        rows = []
+        url = f'https://s.cafef.vn/TraCuuLichSu2/{page_index}/{market}/{current_date.strftime("%d/%m/%Y")}.chn'
+
+        html_content = requests.get(url).text
+        soup = BeautifulSoup(html_content,"html.parser")
+
+        table = soup.find("table",attrs={"id": "table2sort"})
+        if table is not None:
+            tr_els = table.find_all("tr")
+            for tr_el in tr_els:
+                rows.append(extract_tr_data_from_table(tr_el))
+        return rows
+
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tds = [td_el.text.strip() for td_el in tr_el.find_all("td")]
+            #print(tds)
+            tr_dict["market"] = market
+            tr_dict["ma"] = tds[0]
+            tr_dict["ngay"] = current_date
+            tr_dict["du_mua"] = convert_helper.convert_str_to_decimal(tds[1].replace(',',''))
+            tr_dict["du_ban"] = convert_helper.convert_str_to_decimal(tds[2].replace(',',''))
+            tr_dict["gia"] = convert_helper.convert_str_to_float(tds[3].replace(',',''))
+
+            strs = tds[4].strip().split(' ')
+            if len(strs) == 3:
+                temp = convert_helper.convert_str_to_float(strs[0].replace(',',''))
+                tr_dict["gia_tri_thay_doi"] = temp if temp is not None else None
+                percent_change_str = re.sub(r'[( %)]', '', strs[1].strip())
+                temp = convert_helper.convert_str_to_float(percent_change_str)
+                tr_dict["phan_tram_thay_doi"] =  temp / 100 if temp is not None else None
+            else:
+                tr_dict["gia_tri_thay_doi"] = None
+                tr_dict["phan_tram_thay_doi"] = None
+
+            tr_dict["so_lenh_dat_mua"] = convert_helper.convert_str_to_decimal(tds[5].replace(',',''))
+            tr_dict["khoi_luong_dat_mua"] = convert_helper.convert_str_to_decimal(tds[6].replace(',',''))
+            tr_dict["kl_trung_binh_1_lenh_mua"] = convert_helper.convert_str_to_decimal(tds[7].replace(',',''))
+            tr_dict["so_lenh_dat_ban"] = convert_helper.convert_str_to_decimal(tds[8].replace(',',''))
+            tr_dict["khoi_luong_dat_ban"] = convert_helper.convert_str_to_decimal(tds[9].replace(',',''))
+            tr_dict["kl_trung_binh_1_lenh_ban"] = convert_helper.convert_str_to_decimal(tds[10].replace(',',''))
+            tr_dict["chenh_lech_mua_ban"] = convert_helper.convert_str_to_decimal(tds[11].replace(',',''))
+
+        return tr_dict
+
+    all_rows = []
+    delta = timedelta(days=1)
+    current_date = from_date
+    while current_date <= to_date:
+        rows = extract_table_data(current_date)
+        all_rows.extend(rows[1:len(rows)-1])
+        current_date += delta
+        sleep(7)
+
+    df = pd.DataFrame(all_rows)
+    print(df)
+    return df
+
+# Trich xuat du lieu giao dich nuoc ngoai cua tung san
+def extract_daily_market_foreign_transactions_by_bs4(market :str, from_date: date, to_date: date):
+    page_index = 3
+
+    def extract_table_data(current_date: date):
+        rows = []
+        url = f'https://s.cafef.vn/TraCuuLichSu2/{page_index}/{market}/{current_date.strftime("%d/%m/%Y")}.chn'
+
+        html_content = requests.get(url).text
+        soup = BeautifulSoup(html_content,"html.parser")
+
+        table = soup.find("table",attrs={"id": "table2sort"})
+        if table is not None:
+            tr_els = table.find_all("tr")
+            for tr_el in tr_els[3:]:
+                rows.append(extract_tr_data_from_table(tr_el))
+        return rows
+
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tds = [td_el.text.strip() for td_el in tr_el.find_all("td")]
+            # print(tds)
+            tr_dict["market"] = market
+            tr_dict["ma"] = tds[0]
+            tr_dict["ngay"] = current_date
+
+            tr_dict["khoi_luong_mua"] = convert_helper.convert_str_to_decimal(tds[1].replace(',',''))
+            tr_dict["gia_tri_mua"] = convert_helper.convert_str_to_decimal(tds[2].replace(',',''))
+            tr_dict["khoi_luong_ban"] = convert_helper.convert_str_to_decimal(tds[3].replace(',',''))
+            tr_dict["gia_tri_ban"] = convert_helper.convert_str_to_decimal(tds[4].replace(',',''))
+            tr_dict["khoi_luong_giao_dich_rong"] = convert_helper.convert_str_to_decimal(tds[5].replace(',',''))
+            tr_dict["gia_tri_giao_dich_rong"] = convert_helper.convert_str_to_decimal(tds[6].replace(',',''))
+            tr_dict["room_con_lai"] = convert_helper.convert_str_to_decimal(tds[7].replace(',',''))
+
+            percent_change_str = re.sub(r'[( %)]', '', tds[8].strip())
+            temp = convert_helper.convert_str_to_float(percent_change_str)
+            tr_dict["dang_so_huu"] =  temp / 100 if temp is not None else None
+
+            # strs = tds[8].strip().split(' ')
+            # if len(strs) == 2:
+            #     percent_change_str = re.sub(r'[( %)]', '', strs[0].strip())
+            #     temp = convert_helper.convert_str_to_float(percent_change_str)
+            #     tr_dict["dang_so_huu"] =  temp / 100 if temp is not None else None
+            # else:
+            #     tr_dict["dang_so_huu"] = None
+
+        return tr_dict
+
+    all_rows = []
+    delta = timedelta(days=1)
+    current_date = from_date
+    while current_date <= to_date:
+        rows = extract_table_data(current_date)
+        all_rows.extend(rows)
+        current_date += delta
+        sleep(5)
+
+    df = pd.DataFrame(all_rows)
+    print(df)
+    return df
+
+# Trich xuat du lieu Exchange Rate
+def extract_hourly_exchange_rate_by_selenium(driver : webdriver.Chrome = None) -> pd.DataFrame:
+    url = f"https://s.cafef.vn/du-lieu.chn"
+
+    if driver is None:
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--window-size=1920x1080")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument("--disable-setuid-sandbox")
+        chrome_options.add_argument('--disable-dev-shm-usage') 
+        chrome_options.add_argument("--window-size=1920x1080")
+        service = ChromeService(ChromeDriverManager().install())
+
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # driver = webdriver.Remote("http://127.0.0.1:4444/wd/hub",DesiredCapabilities.CHROME)
+        # executable_path = f"{ROOT_DIR}/stock/lib/chromedriver"
+        # driver = webdriver.Chrome(options=chrome_options, executable_path=executable_path)
+    driver.implicitly_wait(10)
+    driver.set_page_load_timeout(120)
+    driver.get(url)
+    
+    driver.find_element(By.XPATH, '//*[@id="tyGia"]').click()
+    sleep(1)
+
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tr_dict["ma"] = tr_el.find_element(By.XPATH,'.//*[@class="symbol  pos1"]').text
+            # tr_dict["ngay"] = datetime.now().strftime("%Y-%m-%d")
+            # tr_dict["thoi_gian"] = datetime.now().strftime("%H:%M:%S")
+            tr_dict["gia"] = convert_helper.convert_str_to_float(tr_el.find_element(By.XPATH,'.//*[@class="price  pos2"]').text)
+            strs = tr_el.find_element(By.XPATH,'.//*[@class="change  pos3"]/*[@class="down"or"up"]').text.strip().split(' ')
+            if len(strs) == 2:
+                temp =convert_helper.convert_str_to_float(strs[0].replace(',',''))
+                tr_dict["gia_tri_thay_doi"] = temp if temp is not None else None
+                percent_change_str = re.sub(r'[( %)]', '', strs[1].strip())
+                temp = convert_helper.convert_str_to_float(percent_change_str)
+                tr_dict["phan_tram_thay_doi"] =  temp / 100 if temp is not None else None
+            else:
+                tr_dict["gia_tri_thay_doi"] = None
+                tr_dict["phan_tram_thay_doi"] = None
+
+            # tr_dict["etl_datetime"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        return tr_dict
+
+    tr_els = driver.find_elements(By.XPATH,'//*[@id="dataBusiness"]/tbody/tr')
+    rows = []
+    for tr_el in tr_els[1::]:
+        rows.append(extract_tr_data_from_table(tr_el))
+    
+    df = pd.DataFrame(rows)
+    print(df)
+    return df
+
+# Trich xuat du lieu Merchandise
+def extract_hourly_merchandise_by_bs4():
+    def extract_table_data():
+        rows = []
+        url = f'https://s.cafef.vn/hang-hoa-tieu-bieu.chn'
+
+        html_content = requests.get(url).text
+        soup = BeautifulSoup(html_content,"html.parser")
+
+        table = soup.find("div",attrs={"class": "hanghoa-content"})
+        if table is not None:
+            tr_els = table.find_all("tr")
+            for tr_el in tr_els[1::]:
+                rows.append(extract_tr_data_from_table(tr_el))
+                # print(tr_els)
+        return rows
+    
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tds = [td_el.text.strip() for td_el in tr_el.find_all("td")]
+            # print(tds)
+            tr_dict["hang_hoa"] = tds[0]
+            tr_dict["ngay"] = datetime.now().strftime("%Y-%m-%d")
+            tr_dict["thoi_gian"] = datetime.now().strftime("%H:%M:%S")
+            tr_dict["gia_cuoi_cung"] = convert_helper.convert_str_to_float(tds[1].replace(',',''))
+            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[2].replace(',', ''))
+            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[3].replace(',', ''))
+            temp_gia_thay_doi = convert_helper.convert_str_to_float(re.sub(r'[(+ %)]', '', tds[4].strip()))
+            temp_phan_tram_thay_doi = convert_helper.convert_str_to_float(re.sub(r'[(+ %)]', '', tds[5].strip()))
+            tr_dict["gia_thay_doi"] = temp_gia_thay_doi / 100 if temp_gia_thay_doi is not None else None
+            tr_dict["phan_tram_thay_doi"] = temp_phan_tram_thay_doi / 100 if temp_phan_tram_thay_doi is not None else None
+            # print(tr_el)
+        return tr_dict
+        # print(tr_dict)
+
+    # extract_table_data()
+    all_rows = []
+    rows = extract_table_data()
+    all_rows.extend(rows)
+
+    sleep(5)
+        
+    df = pd.DataFrame(all_rows)
+    print(df)
+    # return df
+
+# Trich xuat du lieu World Stock
+def extract_hourly_world_stock_by_bs4():
+    def extract_table_data():
+        rows = []
+        url = f'https://s.cafef.vn/chung-khoan-the-gioi.chn'
+
+        html_content = requests.get(url).text
+        soup = BeautifulSoup(html_content,"html.parser")
+
+        table = soup.find("div",attrs={"class": "hanghoa-content"})
+        if table is not None:
+            tr_els = table.find_all("tr")
+            for tr_el in tr_els[1::]:
+                rows.append(extract_tr_data_from_table(tr_el))
+                # print(tr_els)
+        return rows
+    
+    def extract_tr_data_from_table(tr_el):
+        tr_dict = {}
+        if tr_el is not None:
+            tds = [td_el.text.strip() for td_el in tr_el.find_all("td")]
+            # print(tds)
+            tr_dict["chi_so"] = tds[0]
+            tr_dict["ngay"] = datetime.now().strftime("%Y-%m-%d")
+            tr_dict["thoi_gian"] = datetime.now().strftime("%H:%M:%S")
+            tr_dict["gia_cuoi_cung"] = convert_helper.convert_str_to_float(tds[1].replace(',',''))
+            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[2].replace(',', ''))
+            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[3].replace(',', ''))
+            
+            temp_gia_thay_doi = convert_helper.convert_str_to_float(re.sub(r'[(+ %)]', '', tds[4].strip()))
+            temp_phan_tram_thay_doi = convert_helper.convert_str_to_float(re.sub(r'[(+ %)]', '', tds[5].strip()))
+            tr_dict["gia_thay_doi"] = temp_gia_thay_doi / 100 if temp_gia_thay_doi is not None else None
+            tr_dict["phan_tram_thay_doi"] = temp_phan_tram_thay_doi / 100 if temp_phan_tram_thay_doi is not None else None
+            # print(tr_el)
+        return tr_dict
+        # print(tr_dict)
+
+    # extract_table_data()
+    all_rows = []
+    rows = extract_table_data()
+    all_rows.extend(rows)
+
+    sleep(5)
+        
     df = pd.DataFrame(all_rows)
     print(df)
     return df

@@ -104,7 +104,7 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
                     "price_change": di["PriceChange"],
                     "per_price_change": di["PerPriceChange"],
                     "ceiling_price": di["CeilingPrice"],
-                    "floor_price": di["FloorPrice"],
+                    "floor_price": di["FloorPrice"], 
                     "ref_price": di["RefPrice"],
                     "open_price": di["OpenPrice"],
                     "highest_price": di["HighestPrice"],
@@ -142,6 +142,94 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
         if df.shape[0] >= 1:
             handle_delete_data(cursor, symbol, from_date, to_date)
             handle_insert_data(cursor, df)
+    except Exception as e:
+        print(e)
+    finally:
+        db.close_session(conn, cursor)
+
+    end_time = datetime.now()
+    print(f"Symbol: {symbol} From Date: {from_date} - To Date: {to_date} StartTime: {start_time} Duration: {end_time - start_time}")
+
+def etl_get_securities(data_destination_type: DATA_DESTINATION_TYPE,
+                          period_type: PERIOD_TYPE, business_date: Optional[date] = None,
+                          from_date: Optional[date] = None, to_date: Optional[date] = None):
+    print(f"---Task: ETL Securities Data---")
+    start_time = datetime.now()
+    symbols = "PVI,PRE" #,BVH,BMI,PTI,PGI,MIG,VNR,OPC,DVN,VLB,SHI,VNINDEX,VN30INDEX,VN100-INDEX,HNX-INDEX,HNX30-INDEX"
+    symbols = symbols.split(",")
+    print(symbols)
+    
+    if data_destination_type == DATA_DESTINATION_TYPE.SQL_SERVER:
+        for symbol in symbols:
+            etl_get_securities_symbol_to_sql_server(symbol,period_type,from_date, to_date)
+
+    end_time = datetime.now()
+    print(f"Duration: {end_time - start_time}")
+    print(f"Done.")
+
+def etl_get_securities_symbol_to_sql_server(symbol: str,period_type: PERIOD_TYPE, bussiness_date: Optional[date] = None,
+                                            from_date: Optional[date] = None,to_date: Optional[date] = None):
+    start_time = datetime.now()
+
+    if period_type != PERIOD_TYPE.PERIOD:
+        from_date, to_date = datetime_helper.calc_period_range(business_date=bussiness_date,period_type=period_type)
+
+    if not(from_date and to_date):
+        return
+
+    periods = datetime_helper.get_1_month_timespan_periods(from_date,to_date)
+
+    def handle_insert_data(cursor: Cursor, df: pd.DataFrame):
+        cursor.execute("BEGIN TRANSACTION")
+        for di in df.iterrows():
+            print(di)
+            cursor.execute("""
+            INSERT INTO ssi.security(
+                symbol,market,stock_name,stock_en_name,etl_date,etl_datetime) VALUES
+                (?,?,?,?,?,?)""",
+                di["symbol"],di["market"],di["stock_name"],di["stock_en_name"],di["etl_date"], di["etl_datetime"])
+
+        cursor.execute("COMMIT TRANSACTION")
+        cursor.commit()
+
+    def handle_update_data(cursor: Cursor, df: pd.DataFrame):
+        try:
+            sql_query = pd.read_sql_query(""""
+            SELECT symbol,market,stock_name,stock_en_name
+            FROM ssi.security """)
+
+            df1 = pd.DataFrame(sql_query,columns=['symbol','market','stock_name','stock_en_name'])
+            print(df1)
+        except:
+            print("Unable to convert the data")
+
+    conn, cursor = db.open_session(SQL_SERVER_CONFIG.CONNECTION_STRING)
+    try:
+        result = []
+        for period in periods:  # get data from api in a period
+            print(f"Period: {period['from_date']} {period['to_date']}")
+            res = ssi_api.get_securities(symbol, period['from_date'], period['to_date'])
+            # print(res["data"])
+            if(res and res["success"] and res["data"] and res["totalRecord"]):
+               
+                data_items = [{
+                    "symbol": di["Symbol"],
+                    "market": di["Market"],
+                    "stock_name": di["StockName"],
+                    "stock_en_name": di["StockEnName"],
+
+                    "etl_date": date.today(),
+                    "etl_datetime": datetime.now()
+                } for di in res["data"]]
+                result.extend(data_items)
+            
+            time.sleep(MARKET_API.DEFAULT_REQUEST_API_DELAY_TIME)
+        # print(result)
+        df = pd.DataFrame(result)
+        # print(df)
+        if df.shape[0] >= 1:
+            handle_insert_data(cursor, df)
+            #handle_update_data(cursor, df)
     except Exception as e:
         print(e)
     finally:

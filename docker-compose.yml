@@ -1,0 +1,15 @@
+version: "3.0"
+services:
+  selenium:
+    image: selenium/standalone-chrome
+    hostname: selenium
+  
+  cafef:
+    depends_on:
+      - selenium
+    image: khanhlq10/kpim_dw_stock:cron_job_etl
+    restart: on-failure
+    volumes:
+      - etl_job_log:/opt/mount
+volumes:
+  etl_job_log:

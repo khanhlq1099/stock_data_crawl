@@ -34,13 +34,18 @@ def get_securities(market: str = None, page_index: int = 1, page_size: int = MAR
     # print(access_token)
 
     api_url = MARKET_API.ROOT_PATH + MARKET_API.SECURITIES_API
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {access_token}"
+    }
     params = {
         "market": market,  # HOSE, HNX, UPCOM, DER
         "pageIndex": page_index,
         "pageSize": page_size
     }
 
-    response = requests.get(api_url, headers=authorization_headers(access_token), params=params, data=None)
+    response = requests.get(api_url, headers=headers, params=params, data=None)
     response = json.loads(response.content)
 
     if (response["message"] and response["message"] == 'Success'):

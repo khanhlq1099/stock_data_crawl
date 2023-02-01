@@ -23,5 +23,5 @@ class SHAREPOINT_CONFIG:
 class SQL_SERVER_CONFIG:
     # -- Window CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=10.10.10.20,1436;DATABASE=dw_stock;UID=etl;PWD=KPIM@#2022;Trusted_Connection=yes;TrustServerCertificate=Yes;"
     # MacOS
-    CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=222.252.14.117;DATABASE=dw_stock;UID=etl;PWD=KPIM@#2022;TrustServerCertificate=Yes;"
+    CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=222.252.14.117;DATABASE=dw_stock;UID=etl;PWD=KPIM#2022;TrustServerCertificate=Yes;"
 

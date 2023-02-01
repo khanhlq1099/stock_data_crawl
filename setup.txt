@@ -1,0 +1,10 @@
+typer
+beautifulsoup4
+numpy
+Office365-REST-Python-Client
+pandas
+pyodbc
+requests
+selenium
+webdriver-manager
+chromedriver
