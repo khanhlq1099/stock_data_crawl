@@ -1,11 +1,10 @@
 from cmath import nan
 from datetime import date, datetime
-import imp
 import re
 from json.encoder import INFINITY
 from typing import Optional
 import pandas as pd
-from pyodbc import Connection, Cursor
+from pyodbc import Connection, Cursor,connect
 
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -18,6 +17,8 @@ from stock.lib.core.constants import DATA_DESTINATION_TYPE, PERIOD_TYPE
 import stock.lib.datetime_helper as datetime_helper
 import stock.lib.sql_server as db
 import stock.module.cafef.crawler as cafef_crawler
+import smtplib
+
 
 
 def etl_daily_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
@@ -42,8 +43,8 @@ def etl_daily_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
     # symbols = list(map(lambda x: re.findall("(?<=\')(\w+)(?=\')", str(x))[0], symbols))
     # cursor.close()
     
-    symbols = "VIC,PAC,PVI,PRE,BVH,BMI,PTI,PGI,MIG,VNR,OPC,DVN,VLB,SHI,VNINDEX,VN30INDEX,VN100-INDEX,HNX-INDEX,HNX30-INDEX,VLPC,PVMR,BOT QL2,EAB,PVR"
-    # symbols = "BMI"
+    symbols = "VIC,PAC,PVI,PRE,BVH,BMI,PTI,PGI,MIG,VNR,OPC,DVN,VLB,SHI,VNINDEX,VN30INDEX,VN100-INDEX,HNX-INDEX,HNX30-INDEX,VLPC,PVMR,BOT QL2,EAB,PVR,AFX"
+    # symbols = "VIB,POW,FPT,VRE,HPG"
     # symbols = "VNR,OPC"
     # symbols = "VNINDEX,VN30INDEX"
     # symbols = "VLPC,PVMR,BOT QL2,EAB,PVR"
@@ -84,6 +85,8 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
         """, symbol, from_date, to_date)
         cursor.commit()
 
+    def to_excel(df:pd.DataFrame):
+        df.to_csv("/kpim_stock/stock_etl/data.csv",index=False,mode='a')
     # function: handle insert batch data to daily_stock_price table
     def handle_insert_data(cursor: Cursor, df: pd.DataFrame):
         df = df.replace(nan,None)
@@ -115,8 +118,8 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument("--disable-setuid-sandbox")
     chrome_options.add_argument('--disable-dev-shm-usage')  
-    # driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-    driver = webdriver.Remote("http://selenium:4444/wd/hub",desired_capabilities=DesiredCapabilities.CHROME,o ptions=chrome_options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+    # driver = webdriver.Remote("http://selenium:4444/wd/hub",desired_capabilities=DesiredCapabilities.CHROME,options=chrome_options)
 
     conn, cursor = db.open_session(SQL_SERVER_CONFIG.CONNECTION_STRING)
     try:
@@ -124,26 +127,15 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
         # print(df)
         if df.shape[0] >= 1:
             handle_delete_data(cursor, symbol, from_date, to_date)
-            handle_insert_data(cursor, df)
- 
+            handle_insert_data(cursor, df)    
+            # to_excel(df)
     except Exception as e:
         print(e)
         send_email(symbol)
         
     finally:
         db.close_session(conn, cursor)
-        # driver.quit()
 
-    # df = cafef_crawler.extract_daily_symbol_price_data(
-    #     symbol, from_date, to_date)
-    # # print(df)
-    # df = df.sort_values(['ma', 'ngay'], ascending=[True, True])
-    # if df.shape[0] >= 1:
-    #     handle_delete_data(cursor, symbol, from_date, to_date)
-    #     handle_insert_data(cursor, df)
-    # db.close_session(conn, cursor)
-
-    # driver.close()
     driver.quit()
 
     end_time = datetime.now()
@@ -748,8 +740,8 @@ def etl_hourly_world_stock_to_sql_server(period_type: PERIOD_TYPE, business_date
 
     print(f"From Date: {from_date} - To Date: {to_date} StartTime: {start_time}")
 
+
 def send_email(symbol:str):
-    import smtplib
     # creates SMTP session
     s = smtplib.SMTP('smtp.gmail.com', 587)
     # start TLS for security
@@ -757,11 +749,16 @@ def send_email(symbol:str):
     # Authentication
     s.login("khanhlq1099.1@gmail.com", "eukiqxpsomgkusue")
     # message to be sent
-    message = "Error " + symbol
+    message = """\
+            Subject: ERROR
+            Hi JQK,
+
+            Error + {symbol}.""" 
     # sending the mail
     s.sendmail("khanhlq1099.1@gmail.com", "khanhlq1099@gmail.com", message)
     # terminating the session
     s.quit()
+
 #----------------------------------------------------------------------------------------------------------------------#
 # def etl_daily_symbol_price_in_month_period(data_destination_type: DATA_DESTINATION_TYPE,
 #                                            symbol: str, business_date: date):
