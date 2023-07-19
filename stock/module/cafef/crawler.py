@@ -64,24 +64,6 @@ def extract_daily_symbol_price_data(symbol: str, from_date: date, to_date: date,
             for tr_el in tr_els:
                 rows.append(extract_tr_data_from_table(tr_el))
 
-        # table_els = driver.find_elements(
-        #     By.XPATH, '//table[@id="GirdTable"]')
-        # if len(table_els) > 0:
-        #     tr_els = table_els[0].find_elements(
-        #         By.XPATH, '//tr[starts-with(@id,"ctl00_ContentPlaceHolder1_ctl03_rptData")]')
-
-        #     for tr_el in tr_els:
-        #         rows.append(extract_tr_data_from_table1(tr_el))
-        # else:
-        #     table_els = driver.find_elements(
-        #         By.XPATH, '//table[@id="GirdTable2"]')
-        #     if len(table_els) > 0:
-        #         tr_els = table_els[0].find_elements(
-        #             By.XPATH, '//tr[starts-with(@id,"ctl00_ContentPlaceHolder1_ctl03_rptData")]')
-
-        #         for tr_el in tr_els:
-        #             rows.append(extract_tr_data_from_table2(tr_el))
-
         return rows
 
     def extract_tr_data_from_table(tr_el: WebElement):
@@ -269,144 +251,144 @@ def extract_daily_symbol_price_data(symbol: str, from_date: date, to_date: date,
         # tr_dict["gia_thap_nhat"] = 1
         return tr_dict
 
-    def extract_tr_data_from_table1(tr_el: WebElement):
-        tr_dict = {}
-        td_els = tr_el.find_elements(By.CSS_SELECTOR, "td")
-        tds = [td_el.text.strip() for td_el in td_els]
-        print(tds)
-        if len(tds) == 13:
-            # bang co day du cac cot, co cot gia dieu chinh, gia tham chieu
-            tr_dict["ma"] = symbol
-            tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
-            tr_dict["gia_dieu_chinh"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
-            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[2].replace(',', '')) * 1000
-            change_strs = tds[3].strip().split(' (')
-            if len(change_strs) == 2:
-                tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
-                percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
-                tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
-            else:
-                tr_dict["gia_tri_thay_doi"] = None
-                tr_dict["phan_tram_thay_doi"] = None
+    # def extract_tr_data_from_table1(tr_el: WebElement):
+    #     tr_dict = {}
+    #     td_els = tr_el.find_elements(By.CSS_SELECTOR, "td")
+    #     tds = [td_el.text.strip() for td_el in td_els]
+    #     print(tds)
+    #     if len(tds) == 13:
+    #         # bang co day du cac cot, co cot gia dieu chinh, gia tham chieu
+    #         tr_dict["ma"] = symbol
+    #         tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
+    #         tr_dict["gia_dieu_chinh"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
+    #         tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[2].replace(',', '')) * 1000
+    #         change_strs = tds[3].strip().split(' (')
+    #         if len(change_strs) == 2:
+    #             tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
+    #             percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
+    #             tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
+    #         else:
+    #             tr_dict["gia_tri_thay_doi"] = None
+    #             tr_dict["phan_tram_thay_doi"] = None
 
-            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
+    #         tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
 
-            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[8].replace(',', ''))
-            tr_dict["gia_tham_chieu"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
-            tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
-            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[11].replace(',', '')) * 1000
-            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[12].replace(',', '')) * 1000
+    #         tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[8].replace(',', ''))
+    #         tr_dict["gia_tham_chieu"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
+    #         tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
+    #         tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[11].replace(',', '')) * 1000
+    #         tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[12].replace(',', '')) * 1000
 
-        elif len(tds) == 10:
-            # Chi so VN100-INDEX,HNX-INDEX,HNX30-INDEX: khong co cot gia dieu chinh
-            tr_dict["ma"] = symbol
-            tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
-            tr_dict["gia_dieu_chinh"] = None
-            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
-            change_strs = tds[2].strip().split(' (')
-            if len(change_strs) == 2:
-                tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
-                percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
-                tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float( percent_change_str) / 100
-            else:
-                tr_dict["gia_tri_thay_doi"] = None
-                tr_dict["phan_tram_thay_doi"] = None
+    #     elif len(tds) == 10:
+    #         # Chi so VN100-INDEX,HNX-INDEX,HNX30-INDEX: khong co cot gia dieu chinh
+    #         tr_dict["ma"] = symbol
+    #         tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
+    #         tr_dict["gia_dieu_chinh"] = None
+    #         tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
+    #         change_strs = tds[2].strip().split(' (')
+    #         if len(change_strs) == 2:
+    #             tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
+    #             percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
+    #             tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float( percent_change_str) / 100
+    #         else:
+    #             tr_dict["gia_tri_thay_doi"] = None
+    #             tr_dict["phan_tram_thay_doi"] = None
 
-            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
+    #         tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
 
-            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
-            tr_dict["gia_tham_chieu"] = None
-            tr_dict["gia_mo_cua"] = None
-            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
-            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
+    #         tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
+    #         tr_dict["gia_tham_chieu"] = None
+    #         tr_dict["gia_mo_cua"] = None
+    #         tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
+    #         tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
 
-        return tr_dict
+    #     return tr_dict
 
-    def extract_tr_data_from_table2(tr_el: WebElement):
-        tr_dict = {}
-        td_els = tr_el.find_elements(By.CSS_SELECTOR, "td")
-        tds = [td_el.text.strip() for td_el in td_els]
-        print(tds)
-        if len(tds) == 15:
-            # bang cho cac ma chung khoan, khong co cot gia tham chieu
-            tr_dict["ma"] = symbol
-            tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
-            tr_dict["gia_dieu_chinh"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
-            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[2].replace(',', '')) * 1000
-            change_strs = tds[3].strip().split(' (')
-            if len(change_strs) == 2:
-                tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
-                percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
-                tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
-            else:
-                tr_dict["gia_tri_thay_doi"] = None
-                tr_dict["phan_tram_thay_doi"] = None
+    # def extract_tr_data_from_table2(tr_el: WebElement):
+    #     tr_dict = {}
+    #     td_els = tr_el.find_elements(By.CSS_SELECTOR, "td")
+    #     tds = [td_el.text.strip() for td_el in td_els]
+    #     print(tds)
+    #     if len(tds) == 15:
+    #         # bang cho cac ma chung khoan, khong co cot gia tham chieu
+    #         tr_dict["ma"] = symbol
+    #         tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
+    #         tr_dict["gia_dieu_chinh"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
+    #         tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[2].replace(',', '')) * 1000
+    #         change_strs = tds[3].strip().split(' (')
+    #         if len(change_strs) == 2:
+    #             tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
+    #             percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
+    #             tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
+    #         else:
+    #             tr_dict["gia_tri_thay_doi"] = None
+    #             tr_dict["phan_tram_thay_doi"] = None
 
-            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
+    #         tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
 
-            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[8].replace(',', ''))
-            tr_dict["gia_tham_chieu"] = None
-            tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
-            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
-            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[11].replace(',', '')) * 1000
+    #         tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[8].replace(',', ''))
+    #         tr_dict["gia_tham_chieu"] = None
+    #         tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
+    #         tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
+    #         tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[11].replace(',', '')) * 1000
 
-        elif len(tds) == 14:
-            # Chi so VNINDEX,VN30INDEX: khong co cot gia dieu chinh
-            tr_dict["ma"] = symbol
-            tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
-            tr_dict["gia_dieu_chinh"] = None
-            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
-            change_strs = tds[2].strip().split(' (')
-            if len(change_strs) == 2:
-                tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
-                percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
-                tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
-            else:
-                tr_dict["gia_tri_thay_doi"] = None
-                tr_dict["phan_tram_thay_doi"] = None
+    #     elif len(tds) == 14:
+    #         # Chi so VNINDEX,VN30INDEX: khong co cot gia dieu chinh
+    #         tr_dict["ma"] = symbol
+    #         tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
+    #         tr_dict["gia_dieu_chinh"] = None
+    #         tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
+    #         change_strs = tds[2].strip().split(' (')
+    #         if len(change_strs) == 2:
+    #             tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
+    #             percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
+    #             tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
+    #         else:
+    #             tr_dict["gia_tri_thay_doi"] = None
+    #             tr_dict["phan_tram_thay_doi"] = None
 
-            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
+    #         tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
 
-            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
-            tr_dict["gia_tham_chieu"] = None
-            tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
-            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
-            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
+    #         tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
+    #         tr_dict["gia_tham_chieu"] = None
+    #         tr_dict["gia_mo_cua"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
+    #         tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
+    #         tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[10].replace(',', '')) * 1000
 
-        elif len(tds) == 10:
-            # Chi so VN100-INDEX,HNX-INDEX,HNX30-INDEX: khong co cot gia dieu chinh
-            tr_dict["ma"] = symbol
-            tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
-            tr_dict["gia_dieu_chinh"] = None
-            tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
-            change_strs = tds[2].strip().split(' (')
-            if len(change_strs) == 2:
-                tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
-                percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
-                tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
-            else:
-                tr_dict["gia_tri_thay_doi"] = None
-                tr_dict["phan_tram_thay_doi"] = None
+    #     elif len(tds) == 10:
+    #         # Chi so VN100-INDEX,HNX-INDEX,HNX30-INDEX: khong co cot gia dieu chinh
+    #         tr_dict["ma"] = symbol
+    #         tr_dict["ngay"] = convert_helper.convert_str_to_datetime(tds[0], format="%d/%m/%Y").date()
+    #         tr_dict["gia_dieu_chinh"] = None
+    #         tr_dict["gia_dong_cua"] = convert_helper.convert_str_to_float(tds[1].replace(',', '')) * 1000
+    #         change_strs = tds[2].strip().split(' (')
+    #         if len(change_strs) == 2:
+    #             tr_dict["gia_tri_thay_doi"] = convert_helper.convert_str_to_float(change_strs[0].replace(',', '')) * 1000
+    #             percent_change_str = re.sub(r'[( %)]', '', change_strs[1])
+    #             tr_dict["phan_tram_thay_doi"] = convert_helper.convert_str_to_float(percent_change_str) / 100
+    #         else:
+    #             tr_dict["gia_tri_thay_doi"] = None
+    #             tr_dict["phan_tram_thay_doi"] = None
 
-            tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
+    #         tr_dict["khoi_luong_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[4].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_khop_lenh"] = convert_helper.convert_str_to_decimal(tds[5].replace(',', ''))
 
-            tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
-            tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
-            tr_dict["gia_tham_chieu"] = None
-            tr_dict["gia_mo_cua"] = None
-            tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
-            tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
-        # print(tr_dict)
-        return tr_dict
+    #         tr_dict["khoi_luong_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[6].replace(',', ''))
+    #         tr_dict["gia_tri_giao_dich_thoa_thuan"] = convert_helper.convert_str_to_decimal(tds[7].replace(',', ''))
+    #         tr_dict["gia_tham_chieu"] = None
+    #         tr_dict["gia_mo_cua"] = None
+    #         tr_dict["gia_cao_nhat"] = convert_helper.convert_str_to_float(tds[8].replace(',', '')) * 1000
+    #         tr_dict["gia_thap_nhat"] = convert_helper.convert_str_to_float(tds[9].replace(',', '')) * 1000
+    #     # print(tr_dict)
+    #     return tr_dict
 
     all_rows = []
 
@@ -433,12 +415,7 @@ def extract_daily_symbol_price_data(symbol: str, from_date: date, to_date: date,
     # driver.quit()
 
     df = pd.DataFrame(data=all_rows)
-    # df = df.sort_values(['ma', 'ngay'], ascending=[True, True])
-    # Xử lý lỗi do tự động chuyển kiểu None thành NaN do cột này vốn là kiểu float
-    # df['phan_tram_thay_doi']=df['phan_tram_thay_doi'].replace(np.nan, None)
-    # print(df.head(5))
-    # print(all_rows)
-    # print(df)
+
     return df
 
 

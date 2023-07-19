@@ -1,7 +1,7 @@
-30 15 * * * cd /stock_etl && python3.9 -m stock cafef-etl-daily-foreign-transactions SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_foreign_transactions.log 2>&1
-30 15 * * * cd /stock_etl && python3.9 -m stock cafef-etl-daily-history-lookup SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_history_lookup.log 2>&1
-30 15 * * * cd /stock_etl && python3.9 -m stock cafef-etl-daily-setting-command SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_setting_command.log 2>&1
-30 16 * * * cd /stock_etl && python3.9 -m stock cafef-etl-daily-stock-price SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_stock_price.log 2>&1
-30 9,12,15,17 * * * cd /stock_etl && python3.9 -m stock cafef-etl-hourly-stock-price SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_hourly_stock_price.log 2>&1
+30 15 * * * cd /stock_etl && python3.8 -m stock cafef-etl-daily-foreign-transactions SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_foreign_transactions.log 2>&1
+30 15 * * * cd /stock_etl && python3.8 -m stock cafef-etl-daily-history-lookup SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_history_lookup.log 2>&1
+30 15 * * * cd /stock_etl && python3.8 -m stock cafef-etl-daily-setting-command SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_setting_command.log 2>&1
+30 16,21 * * * cd /stock_etl && python3.8 -m stock cafef-etl-daily-stock-price SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_daily_stock_price.log 2>&1
+30 9,12,15,17 * * * cd /stock_etl && python3.8 -m stock cafef-etl-hourly-stock-price SQL_SERVER TODAY --today >> /opt/mount/cafef_etl_hourly_stock_price.log 2>&1
 
 #Empty Line

@@ -45,7 +45,7 @@ def etl_daily_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
     
     symbols = "VIC,PAC,PVI,PRE,BVH,BMI,PTI,PGI,MIG,VNR,OPC,DVN,VLB,SHI,VNINDEX,VN30INDEX,VN100-INDEX,HNX-INDEX,HNX30-INDEX,VLPC,PVMR,BOT QL2,EAB,PVR,AFX"
     # symbols = "VIB,POW,FPT,VRE,HPG"
-    # symbols = "VNR,OPC"
+    # symbols = "PAC"
     # symbols = "VNINDEX,VN30INDEX"
     # symbols = "VLPC,PVMR,BOT QL2,EAB,PVR"
     # symbols = "HNX-INDEX,HNX30-INDEX"
@@ -118,8 +118,8 @@ def etl_daily_symbol_price_to_sql_server(symbol: str, period_type: PERIOD_TYPE, 
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument("--disable-setuid-sandbox")
     chrome_options.add_argument('--disable-dev-shm-usage')  
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-    # driver = webdriver.Remote("http://selenium:4444/wd/hub",desired_capabilities=DesiredCapabilities.CHROME,options=chrome_options)
+    # driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+    driver = webdriver.Remote("http://selenium:4444/wd/hub",options=chrome_options)
 
     conn, cursor = db.open_session(SQL_SERVER_CONFIG.CONNECTION_STRING)
     try:
@@ -747,15 +747,15 @@ def send_email(symbol:str):
     # start TLS for security
     s.starttls()
     # Authentication
-    s.login("khanhlq1099.1@gmail.com", "eukiqxpsomgkusue")
+    s.login("callmearahirik@gmail.com", "dbaagicefjobpyxz")
     # message to be sent
     message = """\
             Subject: ERROR
-            Hi JQK,
+            Hi,
 
             Error + {symbol}.""" 
     # sending the mail
-    s.sendmail("khanhlq1099.1@gmail.com", "khanhlq1099@gmail.com", message)
+    s.sendmail("callmearahirik@gmail.com", "kirihara.cken@gmail.com", message)
     # terminating the session
     s.quit()
 

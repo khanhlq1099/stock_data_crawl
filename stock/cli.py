@@ -14,7 +14,6 @@ app = typer.Typer()
 def healthcheck(data_scoure: str):
     typer.echo(f"{data_scoure} is OK!")
 
-
 @app.command()
 def init_db():
     stock_service.init_db()
@@ -50,7 +49,6 @@ def cafef_etl_daily_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
     cafef_service.etl_daily_stock_price(data_destination_type,period_type, business_date,from_date, to_date)
     typer.echo("")
 
-
 @app.command()
 def cafef_etl_hourly_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
                                 period_type: PERIOD_TYPE, business_date: Optional[datetime] = None, today: Optional[bool] = False,
@@ -61,7 +59,6 @@ def cafef_etl_hourly_stock_price(data_destination_type: DATA_DESTINATION_TYPE,
     cafef_service.etl_hourly_stock_price(data_destination_type, period_type, business_date, from_date, to_date)
     typer.echo("")
 
-
 @app.command()
 def cafef_etl_daily_history_lookup(data_destination_type: DATA_DESTINATION_TYPE,
                                     period_type: PERIOD_TYPE,business_date: Optional[datetime] = None,today: Optional[bool] = False,
@@ -70,7 +67,6 @@ def cafef_etl_daily_history_lookup(data_destination_type: DATA_DESTINATION_TYPE,
 
     cafef_service.etl_daily_history_lookup(data_destination_type,period_type,business_date,from_date, to_date)
     typer.echo("")
-
 
 @app.command()
 def cafef_etl_daily_setting_command(data_destination_type: DATA_DESTINATION_TYPE,
@@ -81,7 +77,6 @@ def cafef_etl_daily_setting_command(data_destination_type: DATA_DESTINATION_TYPE
 
     cafef_service.etl_daily_setting_command(data_destination_type,period_type,business_date,from_date, to_date)
     typer.echo("")
-
 
 @app.command()
 def cafef_etl_daily_foreign_transactions(data_destination_type: DATA_DESTINATION_TYPE,
@@ -143,7 +138,6 @@ def cafef_test():
     #     DataDestination.SQL_SERVER, symbol="PVI", from_date=from_date, to_date=to_date)
     # cafef_crawler.extract_symbol_history_price_data(symbol="PVI", from_date=from_date, to_date=to_date)
     typer.echo(f"")
-
 
 @app.command()
 def test():

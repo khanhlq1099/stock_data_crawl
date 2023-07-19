@@ -12,11 +12,11 @@ RUN date
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y tzdata
-RUN apt-get install -y python3.9
+RUN apt-get install -y python3.8
 # Install pip
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-RUN apt install -y python3.9-distutils
-RUN python3.9 get-pip.py
+RUN apt install -y python3.8-distutils
+RUN python3.8 get-pip.py
 
 # Add SQL Server ODBC Driver 18 for Ubuntu 18.04
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
@@ -52,8 +52,8 @@ CMD cron && tail -f /opt/cafef_etl_daily_foreign_transactions.log
 
 
 # Custom time
-# CMD python3.9 -m stock cafef-etl-daily-foreign-transactions SQL_SERVER PERIOD --from-date 2019-07-01 --to-date 2019-07-01 >> /opt/mount/cafef_etl_daily_foreign_transactions.log
-# CMD ["/bin/sh", "-c","python3.9 -m stock cafef-etl-daily-history-lookup SQL_SERVER TODAY --business-date 2020-04-01 > /stock/data/cafef_log/cafef_etl_daily_history_lookup.log 2>&1"]
+# CMD python3.8 -m stock cafef-etl-daily-foreign-transactions SQL_SERVER PERIOD --from-date 2019-07-01 --to-date 2019-07-01 >> /opt/mount/cafef_etl_daily_foreign_transactions.log
+# CMD ["/bin/sh", "-c","python3.8 -m stock cafef-etl-daily-history-lookup SQL_SERVER TODAY --business-date 2020-04-01 > /stock/data/cafef_log/cafef_etl_daily_history_lookup.log 2>&1"]
 
 # Manual
 # ENTRYPOINT ["/bin/bash", "-c"]
